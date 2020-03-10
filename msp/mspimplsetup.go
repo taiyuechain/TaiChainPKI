@@ -83,6 +83,7 @@ func (msp *bccspmsp) setupCrypto(conf *m.FabricMSPConfig) error {
 	if msp.cryptoConfig == nil {
 		// Move to defaults
 		msp.cryptoConfig = &m.FabricCryptoConfig{
+
 			SignatureHashFamily:            bccsp.SHA2,
 			IdentityIdentifierHashFunction: bccsp.SHA256,
 		}
