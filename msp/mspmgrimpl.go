@@ -17,13 +17,10 @@ limitations under the License.
 package msp
 
 import (
-	"TaiChainPKI/common/flogging"
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-protos-go/msp"
 	"github.com/pkg/errors"
 )
-
-var mspLogger = flogging.MustGetLogger("msp")
 
 type mspManagerImpl struct {
 	// map that contains all MSPs that we have setup or otherwise added
@@ -46,11 +43,8 @@ func NewMSPManager() MSPManager {
 // Setup initializes the internal data structures of this manager and creates MSPs
 func (mgr *mspManagerImpl) Setup(msps []MSP) error {
 	if mgr.up {
-		mspLogger.Infof("MSP manager already up")
 		return nil
 	}
-
-	mspLogger.Debugf("Setting up the MSP manager (%d msps)", len(msps))
 
 	// create the map that assigns MSP IDs to their manager instance - once
 	mgr.mspsMap = make(map[string]MSP)
@@ -70,8 +64,6 @@ func (mgr *mspManagerImpl) Setup(msps []MSP) error {
 	}
 
 	mgr.up = true
-
-	mspLogger.Debugf("MSP manager setup complete, setup %d msps", len(msps))
 
 	return nil
 }

@@ -143,7 +143,6 @@ func (c certificate) String() string {
 func certToPEM(certificate *x509.Certificate) string {
 	cert, err := certFromX509Cert(certificate)
 	if err != nil {
-		mspIdentityLogger.Warning("Failed converting certificate to asn1", err)
 		return ""
 	}
 	return cert.String()

@@ -17,14 +17,10 @@ import (
 	"time"
 
 	"TaiChainPKI/bccsp"
-	"TaiChainPKI/common/flogging"
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-protos-go/msp"
 	"github.com/pkg/errors"
-	"go.uber.org/zap/zapcore"
 )
-
-var mspIdentityLogger = flogging.MustGetLogger("msp.identity")
 
 type identity struct {
 	// id contains the identifier (MSPID and identity identifier) for this instance
@@ -53,10 +49,6 @@ type identity struct {
 }
 
 func newIdentity(cert *x509.Certificate, pk bccsp.Key, msp *bccspmsp) (Identity, error) {
-	if mspIdentityLogger.IsEnabledFor(zapcore.DebugLevel) {
-		mspIdentityLogger.Debugf("Creating identity instance for cert %s", certToPEM(cert))
-	}
-
 	// Sanitize first the certificate
 	cert, err := msp.sanitizeCert(cert)
 	if err != nil {
@@ -127,8 +119,6 @@ func (id *identity) GetOrganizationalUnits() []*OUIdentifier {
 
 	cid, err := id.msp.getCertificationChainIdentifier(id)
 	if err != nil {
-		mspIdentityLogger.Errorf("Failed getting certification chain identifier for [%v]: [%+v]", id, err)
-
 		return nil
 	}
 
@@ -178,11 +168,6 @@ func (id *identity) Verify(msg []byte, sig []byte) error {
 	digest, err := id.msp.bccsp.Hash(msg, hashOpt)
 	if err != nil {
 		return errors.WithMessage(err, "failed computing digest")
-	}
-
-	if mspIdentityLogger.IsEnabledFor(zapcore.DebugLevel) {
-		mspIdentityLogger.Debugf("Verify: digest = %s", hex.Dump(digest))
-		mspIdentityLogger.Debugf("Verify: sig = %s", hex.Dump(sig))
 	}
 
 	valid, err := id.msp.bccsp.Verify(id.pk, sig, digest, nil)
@@ -264,14 +249,6 @@ func (id *signingidentity) Sign(msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed computing digest")
 	}
-
-	if len(msg) < 32 {
-		mspIdentityLogger.Debugf("Sign: plaintext: %X \n", msg)
-	} else {
-		mspIdentityLogger.Debugf("Sign: plaintext: %X...%X \n", msg[0:16], msg[len(msg)-16:])
-	}
-	mspIdentityLogger.Debugf("Sign: digest: %X \n", digest)
-
 	// Sign
 	return id.signer.Sign(rand.Reader, digest, nil)
 }

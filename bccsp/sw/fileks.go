@@ -244,45 +244,35 @@ func (ks *fileBasedKeyStore) getSuffix(alias string) string {
 func (ks *fileBasedKeyStore) storePrivateKey(alias string, privateKey interface{}) error {
 	rawKey, err := utils.PrivateKeyToPEM(privateKey, ks.pwd)
 	if err != nil {
-		logger.Errorf("Failed converting private key to PEM [%s]: [%s]", alias, err)
 		return err
 	}
-
 	err = ioutil.WriteFile(ks.getPathForAlias(alias, "sk"), rawKey, 0600)
 	if err != nil {
-		logger.Errorf("Failed storing private key [%s]: [%s]", alias, err)
 		return err
 	}
-
 	return nil
 }
 
 func (ks *fileBasedKeyStore) storePublicKey(alias string, publicKey interface{}) error {
 	rawKey, err := utils.PublicKeyToPEM(publicKey, ks.pwd)
 	if err != nil {
-		logger.Errorf("Failed converting public key to PEM [%s]: [%s]", alias, err)
 		return err
 	}
-
 	err = ioutil.WriteFile(ks.getPathForAlias(alias, "pk"), rawKey, 0600)
 	if err != nil {
-		logger.Errorf("Failed storing private key [%s]: [%s]", alias, err)
 		return err
 	}
-
 	return nil
 }
 
 func (ks *fileBasedKeyStore) storeKey(alias string, key []byte) error {
 	pem, err := utils.AEStoEncryptedPEM(key, ks.pwd)
 	if err != nil {
-		logger.Errorf("Failed converting key to PEM [%s]: [%s]", alias, err)
 		return err
 	}
 
 	err = ioutil.WriteFile(ks.getPathForAlias(alias, "key"), pem, 0600)
 	if err != nil {
-		logger.Errorf("Failed storing key [%s]: [%s]", alias, err)
 		return err
 	}
 
@@ -291,19 +281,13 @@ func (ks *fileBasedKeyStore) storeKey(alias string, key []byte) error {
 
 func (ks *fileBasedKeyStore) loadPrivateKey(alias string) (interface{}, error) {
 	path := ks.getPathForAlias(alias, "sk")
-	logger.Debugf("Loading private key [%s] at [%s]...", alias, path)
-
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
-		logger.Errorf("Failed loading private key [%s]: [%s].", alias, err.Error())
-
 		return nil, err
 	}
 
 	privateKey, err := utils.PEMtoPrivateKey(raw, ks.pwd)
 	if err != nil {
-		logger.Errorf("Failed parsing private key [%s]: [%s].", alias, err.Error())
-
 		return nil, err
 	}
 
@@ -312,19 +296,13 @@ func (ks *fileBasedKeyStore) loadPrivateKey(alias string) (interface{}, error) {
 
 func (ks *fileBasedKeyStore) loadPublicKey(alias string) (interface{}, error) {
 	path := ks.getPathForAlias(alias, "pk")
-	logger.Debugf("Loading public key [%s] at [%s]...", alias, path)
-
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
-		logger.Errorf("Failed loading public key [%s]: [%s].", alias, err.Error())
-
 		return nil, err
 	}
 
 	privateKey, err := utils.PEMtoPublicKey(raw, ks.pwd)
 	if err != nil {
-		logger.Errorf("Failed parsing private key [%s]: [%s].", alias, err.Error())
-
 		return nil, err
 	}
 
@@ -333,36 +311,26 @@ func (ks *fileBasedKeyStore) loadPublicKey(alias string) (interface{}, error) {
 
 func (ks *fileBasedKeyStore) loadKey(alias string) ([]byte, error) {
 	path := ks.getPathForAlias(alias, "key")
-	logger.Debugf("Loading key [%s] at [%s]...", alias, path)
-
 	pem, err := ioutil.ReadFile(path)
 	if err != nil {
-		logger.Errorf("Failed loading key [%s]: [%s].", alias, err.Error())
-
 		return nil, err
 	}
-
 	key, err := utils.PEMtoAES(pem, ks.pwd)
 	if err != nil {
-		logger.Errorf("Failed parsing key [%s]: [%s]", alias, err)
-
 		return nil, err
 	}
-
 	return key, nil
 }
 
 func (ks *fileBasedKeyStore) createKeyStoreIfNotExists() error {
 	// Check keystore directory
 	ksPath := ks.path
-	missing, err := utils.DirMissingOrEmpty(ksPath)
+	missing, _ := utils.DirMissingOrEmpty(ksPath)
 
 	if missing {
-		logger.Debugf("KeyStore path [%s] missing [%t]: [%s]", ksPath, missing, utils.ErrToString(err))
 
 		err := ks.createKeyStore()
 		if err != nil {
-			logger.Errorf("Failed creating KeyStore At [%s]: [%s]", ksPath, err.Error())
 			return nil
 		}
 	}
@@ -373,11 +341,7 @@ func (ks *fileBasedKeyStore) createKeyStoreIfNotExists() error {
 func (ks *fileBasedKeyStore) createKeyStore() error {
 	// Create keystore directory root if it doesn't exist yet
 	ksPath := ks.path
-	logger.Debugf("Creating KeyStore at [%s]...", ksPath)
-
 	os.MkdirAll(ksPath, 0755)
-
-	logger.Debugf("KeyStore created at [%s].", ksPath)
 	return nil
 }
 
@@ -386,8 +350,6 @@ func (ks *fileBasedKeyStore) openKeyStore() error {
 		return nil
 	}
 	ks.isOpen = true
-	logger.Debugf("KeyStore opened at [%s]...done", ks.path)
-
 	return nil
 }
 

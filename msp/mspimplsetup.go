@@ -86,15 +86,12 @@ func (msp *bccspmsp) setupCrypto(conf *m.FabricMSPConfig) error {
 			SignatureHashFamily:            bccsp.SHA2,
 			IdentityIdentifierHashFunction: bccsp.SHA256,
 		}
-		mspLogger.Debugf("CryptoConfig was nil. Move to defaults.")
 	}
 	if msp.cryptoConfig.SignatureHashFamily == "" {
 		msp.cryptoConfig.SignatureHashFamily = bccsp.SHA2
-		mspLogger.Debugf("CryptoConfig.SignatureHashFamily was nil. Move to defaults.")
 	}
 	if msp.cryptoConfig.IdentityIdentifierHashFunction == "" {
 		msp.cryptoConfig.IdentityIdentifierHashFunction = bccsp.SHA256
-		mspLogger.Debugf("CryptoConfig.IdentityIdentifierHashFunction was nil. Move to defaults.")
 	}
 
 	return nil
@@ -374,9 +371,7 @@ func (msp *bccspmsp) setupSigningIdentity(conf *m.FabricMSPConfig) error {
 		expirationTime := sid.ExpiresAt()
 		now := time.Now()
 		if expirationTime.After(now) {
-			mspLogger.Debug("Signing identity expires at", expirationTime)
 		} else if expirationTime.IsZero() {
-			mspLogger.Debug("Signing identity has no known expiration time")
 		} else {
 			return errors.Errorf("signing identity expired %v ago", now.Sub(expirationTime))
 		}
@@ -400,7 +395,6 @@ func (msp *bccspmsp) setupOUs(conf *m.FabricMSPConfig) error {
 		found := false
 		for _, id := range msp.ouIdentifiers[ou.OrganizationalUnitIdentifier] {
 			if bytes.Equal(id, certifiersIdentifier) {
-				mspLogger.Warningf("Duplicate found in ou identifiers [%s, %v]", ou.OrganizationalUnitIdentifier, id)
 				found = true
 				break
 			}

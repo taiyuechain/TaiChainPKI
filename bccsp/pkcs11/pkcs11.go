@@ -17,12 +17,10 @@ import (
 	"sync"
 
 	"github.com/miekg/pkcs11"
-	"go.uber.org/zap/zapcore"
 )
 
 func loadLib(lib, pin, label string) (*pkcs11.Ctx, uint, *pkcs11.SessionHandle, error) {
 	var slot uint
-	logger.Debugf("Loading pkcs11 library [%s]\n", lib)
 	if lib == "" {
 		return nil, slot, nil, fmt.Errorf("No PKCS11 library default")
 	}
@@ -43,7 +41,6 @@ func loadLib(lib, pin, label string) (*pkcs11.Ctx, uint, *pkcs11.SessionHandle, 
 		if errToken != nil {
 			continue
 		}
-		logger.Debugf("Looking for %s, found label %s\n", label, info.Label)
 		if label == info.Label {
 			found = true
 			slot = s
@@ -58,15 +55,12 @@ func loadLib(lib, pin, label string) (*pkcs11.Ctx, uint, *pkcs11.SessionHandle, 
 	for i := 0; i < 10; i++ {
 		session, err = ctx.OpenSession(slot, pkcs11.CKF_SERIAL_SESSION|pkcs11.CKF_RW_SESSION)
 		if err != nil {
-			logger.Warningf("OpenSession failed, retrying [%s]\n", err)
 		} else {
 			break
 		}
 	}
 	if err != nil {
-		logger.Fatalf("OpenSession [%s]\n", err)
 	}
-	logger.Debugf("Created new pkcs11 session %+v on slot %d\n", session, slot)
 
 	if pin == "" {
 		return nil, slot, nil, fmt.Errorf("No PIN set")
@@ -84,7 +78,6 @@ func loadLib(lib, pin, label string) (*pkcs11.Ctx, uint, *pkcs11.SessionHandle, 
 func (csp *impl) getSession() (session pkcs11.SessionHandle) {
 	select {
 	case session = <-csp.sessions:
-		logger.Debugf("Reusing existing pkcs11 session %+v on slot %d\n", session, csp.slot)
 
 	default:
 		// cache is empty (or completely in use), create a new session
@@ -93,7 +86,6 @@ func (csp *impl) getSession() (session pkcs11.SessionHandle) {
 		for i := 0; i < 10; i++ {
 			s, err = csp.ctx.OpenSession(csp.slot, pkcs11.CKF_SERIAL_SESSION|pkcs11.CKF_RW_SESSION)
 			if err != nil {
-				logger.Warningf("OpenSession failed, retrying [%s]\n", err)
 			} else {
 				break
 			}
@@ -101,7 +93,6 @@ func (csp *impl) getSession() (session pkcs11.SessionHandle) {
 		if err != nil {
 			panic(fmt.Errorf("OpenSession failed [%s]", err))
 		}
-		logger.Debugf("Created new pkcs11 session %+v on slot %d\n", s, csp.slot)
 		session = s
 	}
 	return session
@@ -126,7 +117,6 @@ func (csp *impl) getECKey(ski []byte) (pubKey *ecdsa.PublicKey, isPriv bool, err
 	_, err = findKeyPairFromSKI(p11lib, session, ski, privateKeyType)
 	if err != nil {
 		isPriv = false
-		logger.Debugf("Private key not found [%s] for SKI [%s], looking for Public key", err, hex.EncodeToString(ski))
 	}
 
 	publicKey, err := findKeyPairFromSKI(p11lib, session, ski, publicKeyType)
@@ -254,7 +244,6 @@ func (csp *impl) generateECKey(curve asn1.ObjectIdentifier, ephemeral bool) (ski
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, hex.EncodeToString(ski)),
 	}
 
-	logger.Infof("Generated new P11 key, SKI %x\n", ski)
 	err = p11lib.SetAttributeValue(session, pub, setskiT)
 	if err != nil {
 		return nil, nil, fmt.Errorf("P11: set-ID-to-SKI[public] failed [%s]", err)
@@ -302,11 +291,6 @@ func (csp *impl) generateECKey(curve asn1.ObjectIdentifier, ephemeral bool) (ski
 
 	pubGoKey := &ecdsa.PublicKey{Curve: nistCurve, X: x, Y: y}
 
-	if logger.IsEnabledFor(zapcore.DebugLevel) {
-		listAttrs(p11lib, session, prv)
-		listAttrs(p11lib, session, pub)
-	}
-
 	return ski, pubGoKey, nil
 }
 
@@ -344,8 +328,6 @@ func (csp *impl) verifyP11ECDSA(ski []byte, msg []byte, R, S *big.Int, byteSize 
 	p11lib := csp.ctx
 	session := csp.getSession()
 	defer csp.returnSession(session)
-
-	logger.Debugf("Verify ECDSA\n")
 
 	publicKey, err := findKeyPairFromSKI(p11lib, session, ski, publicKeyType)
 	if err != nil {
@@ -467,22 +449,18 @@ func ecPoint(p11lib *pkcs11.Ctx, session pkcs11.SessionHandle, key pkcs11.Object
 
 	for _, a := range attr {
 		if a.Type == pkcs11.CKA_EC_POINT {
-			logger.Debugf("EC point: attr type %d/0x%x, len %d\n%s\n", a.Type, a.Type, len(a.Value), hex.Dump(a.Value))
 
 			// workarounds, see above
 			if ((len(a.Value) % 2) == 0) &&
 				(byte(0x04) == a.Value[0]) &&
 				(byte(0x04) == a.Value[len(a.Value)-1]) {
-				logger.Debugf("Detected opencryptoki bug, trimming trailing 0x04")
 				ecpt = a.Value[0 : len(a.Value)-1] // Trim trailing 0x04
 			} else if byte(0x04) == a.Value[0] && byte(0x04) == a.Value[2] {
-				logger.Debugf("Detected SoftHSM bug, trimming leading 0x04 0xXX")
 				ecpt = a.Value[2:len(a.Value)]
 			} else {
 				ecpt = a.Value
 			}
 		} else if a.Type == pkcs11.CKA_EC_PARAMS {
-			logger.Debugf("EC point: attr type %d/0x%x, len %d\n%s\n", a.Type, a.Type, len(a.Value), hex.Dump(a.Value))
 
 			oid = a.Value
 		}
@@ -492,33 +470,6 @@ func ecPoint(p11lib *pkcs11.Ctx, session pkcs11.SessionHandle, key pkcs11.Object
 	}
 
 	return ecpt, oid, nil
-}
-
-func listAttrs(p11lib *pkcs11.Ctx, session pkcs11.SessionHandle, obj pkcs11.ObjectHandle) {
-	var cktype, ckclass uint
-	var ckaid, cklabel []byte
-
-	if p11lib == nil {
-		return
-	}
-
-	template := []*pkcs11.Attribute{
-		pkcs11.NewAttribute(pkcs11.CKA_CLASS, ckclass),
-		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, cktype),
-		pkcs11.NewAttribute(pkcs11.CKA_ID, ckaid),
-		pkcs11.NewAttribute(pkcs11.CKA_LABEL, cklabel),
-	}
-
-	// certain errors are tolerated, if value is missing
-	attr, err := p11lib.GetAttributeValue(session, obj, template)
-	if err != nil {
-		logger.Debugf("P11: get(attrlist) [%s]\n", err)
-	}
-
-	for _, a := range attr {
-		// Would be friendlier if the bindings provided a way convert Attribute hex to string
-		logger.Debugf("ListAttr: type %d/0x%x, length %d\n%s", a.Type, a.Type, len(a.Value), hex.Dump(a.Value))
-	}
 }
 
 var (

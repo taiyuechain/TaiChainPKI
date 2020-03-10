@@ -13,13 +13,11 @@ import (
 
 	"TaiChainPKI/bccsp"
 	"TaiChainPKI/bccsp/sw"
-	"TaiChainPKI/common/flogging"
 	"github.com/miekg/pkcs11"
 	"github.com/pkg/errors"
 )
 
 var (
-	logger           = flogging.MustGetLogger("bccsp_p11")
 	sessionCacheSize = 10
 )
 

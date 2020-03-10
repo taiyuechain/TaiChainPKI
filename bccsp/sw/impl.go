@@ -20,12 +20,7 @@ import (
 	"reflect"
 
 	"TaiChainPKI/bccsp"
-	"TaiChainPKI/common/flogging"
 	"github.com/pkg/errors"
-)
-
-var (
-	logger = flogging.MustGetLogger("bccsp_sw")
 )
 
 // CSP provides a generic implementation of the BCCSP interface based

@@ -81,7 +81,6 @@ func readPemFile(file string) ([]byte, error) {
 }
 
 func getPemMaterialFromDir(dir string) ([][]byte, error) {
-	mspLogger.Debugf("Reading directory %s", dir)
 
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
@@ -99,18 +98,14 @@ func getPemMaterialFromDir(dir string) ([][]byte, error) {
 
 		f, err := os.Stat(fullName)
 		if err != nil {
-			mspLogger.Warningf("Failed to stat %s: %s", fullName, err)
 			continue
 		}
 		if f.IsDir() {
 			continue
 		}
 
-		mspLogger.Debugf("Inspecting file %s", fullName)
-
 		item, err := readPemFile(fullName)
 		if err != nil {
-			mspLogger.Warningf("Failed reading file %s: %s", fullName, err)
 			continue
 		}
 
@@ -160,8 +155,6 @@ func GetLocalMspConfigWithType(dir string, bccspConfig *factory.FactoryOpts, ID,
 	switch mspType {
 	case ProviderTypeToString(FABRIC):
 		return GetLocalMspConfig(dir, bccspConfig, ID)
-	case ProviderTypeToString(IDEMIX):
-		return GetIdemixMspConfig(dir, ID)
 	default:
 		return nil, errors.Errorf("unknown MSP type '%s'", mspType)
 	}
@@ -198,8 +191,6 @@ func GetVerifyingMspConfig(dir, ID, mspType string) (*msp.MSPConfig, error) {
 	switch mspType {
 	case ProviderTypeToString(FABRIC):
 		return getMspConfig(dir, ID, nil)
-	case ProviderTypeToString(IDEMIX):
-		return GetIdemixMspConfig(dir, ID)
 	default:
 		return nil, errors.Errorf("unknown MSP type '%s'", mspType)
 	}
@@ -226,7 +217,6 @@ func getMspConfig(dir string, ID string, sigid *msp.SigningIdentityInfo) (*msp.M
 
 	intermediatecerts, err := getPemMaterialFromDir(intermediatecertsDir)
 	if os.IsNotExist(err) {
-		mspLogger.Debugf("Intermediate certs folder not found at [%s]. Skipping. [%s]", intermediatecertsDir, err)
 	} else if err != nil {
 		return nil, errors.WithMessagef(err, "failed loading intermediate ca certs at [%s]", intermediatecertsDir)
 	}
@@ -234,23 +224,19 @@ func getMspConfig(dir string, ID string, sigid *msp.SigningIdentityInfo) (*msp.M
 	tlsCACerts, err := getPemMaterialFromDir(tlscacertDir)
 	tlsIntermediateCerts := [][]byte{}
 	if os.IsNotExist(err) {
-		mspLogger.Debugf("TLS CA certs folder not found at [%s]. Skipping and ignoring TLS intermediate CA folder. [%s]", tlsintermediatecertsDir, err)
 	} else if err != nil {
 		return nil, errors.WithMessagef(err, "failed loading TLS ca certs at [%s]", tlsintermediatecertsDir)
 	} else if len(tlsCACerts) != 0 {
 		tlsIntermediateCerts, err = getPemMaterialFromDir(tlsintermediatecertsDir)
 		if os.IsNotExist(err) {
-			mspLogger.Debugf("TLS intermediate certs folder not found at [%s]. Skipping. [%s]", tlsintermediatecertsDir, err)
 		} else if err != nil {
 			return nil, errors.WithMessagef(err, "failed loading TLS intermediate ca certs at [%s]", tlsintermediatecertsDir)
 		}
 	} else {
-		mspLogger.Debugf("TLS CA certs folder at [%s] is empty. Skipping.", tlsintermediatecertsDir)
 	}
 
 	crls, err := getPemMaterialFromDir(crlsDir)
 	if os.IsNotExist(err) {
-		mspLogger.Debugf("crls folder not found at [%s]. Skipping. [%s]", crlsDir, err)
 	} else if err != nil {
 		return nil, errors.WithMessagef(err, "failed loading crls at [%s]", crlsDir)
 	}
@@ -294,7 +280,6 @@ func getMspConfig(dir string, ID string, sigid *msp.SigningIdentityInfo) (*msp.M
 
 		// Prepare NodeOUs
 		if configuration.NodeOUs != nil && configuration.NodeOUs.Enable {
-			mspLogger.Debug("Loading NodeOUs")
 			nodeOUs = &msp.FabricNodeOUs{
 				Enable: true,
 			}
@@ -331,7 +316,6 @@ func getMspConfig(dir string, ID string, sigid *msp.SigningIdentityInfo) (*msp.M
 			}
 		}
 	} else {
-		mspLogger.Debugf("MSP configuration file not found at [%s]: [%s]", configFile, err)
 	}
 
 	// Set FabricCryptoConfig
@@ -366,7 +350,6 @@ func loadCertificateAt(dir, certificatePath string, ouType string) []byte {
 	f := filepath.Join(dir, certificatePath)
 	raw, err := readFile(f)
 	if err != nil {
-		mspLogger.Warnf("Failed loading %s certificate at [%s]: [%s]", ouType, f, err)
 	} else {
 		return raw
 	}
