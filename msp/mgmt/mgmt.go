@@ -13,6 +13,7 @@ import (
 	"TaiChainPKI/bccsp"
 	"TaiChainPKI/bccsp/factory"
 	"TaiChainPKI/msp"
+	"TaiChainPKI/msp/cache"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
@@ -152,16 +153,12 @@ func loadLocaMSP(bccsp bccsp.BCCSP) msp.MSP {
 
 	mspInst, err := msp.New(newOpts, bccsp)
 	if err != nil {
-		mspLogger.Fatalf("Failed to initialize local MSP, received err %+v", err)
 	}
 	switch mspType {
 	case msp.ProviderTypeToString(msp.FABRIC):
 		mspInst, err = cache.New(mspInst)
 		if err != nil {
-			mspLogger.Fatalf("Failed to initialize local MSP, received err %+v", err)
 		}
-	case msp.ProviderTypeToString(msp.IDEMIX):
-		// Do nothing
 	default:
 		panic("msp type " + mspType + " unknown")
 	}

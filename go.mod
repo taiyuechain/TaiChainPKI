@@ -9,6 +9,7 @@ require (
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/pkg/errors v0.9.1
+	github.com/spf13/viper v1.6.2
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
 	golang.org/x/sys v0.0.0-20200122134326-e047566fdf82 // indirect
