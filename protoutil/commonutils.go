@@ -8,10 +8,8 @@ package protoutil
 
 import (
 	"crypto/rand"
-	"fmt"
 	"time"
 
-	"TaiChainPKI/internal/pkg/identity"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	cb "github.com/hyperledger/fabric-protos-go/common"
@@ -139,50 +137,6 @@ func MakePayloadHeader(ch *cb.ChannelHeader, sh *cb.SignatureHeader) *cb.Header 
 		ChannelHeader:   MarshalOrPanic(ch),
 		SignatureHeader: MarshalOrPanic(sh),
 	}
-}
-
-// NewSignatureHeader returns a SignatureHeader with a valid nonce.
-func NewSignatureHeader(id identity.Serializer) (*cb.SignatureHeader, error) {
-	creator, err := id.Serialize()
-	if err != nil {
-		return nil, err
-	}
-	nonce, err := CreateNonce()
-	if err != nil {
-		return nil, err
-	}
-
-	return &cb.SignatureHeader{
-		Creator: creator,
-		Nonce:   nonce,
-	}, nil
-}
-
-// NewSignatureHeaderOrPanic returns a signature header and panics on error.
-func NewSignatureHeaderOrPanic(id identity.Serializer) *cb.SignatureHeader {
-	if id == nil {
-		panic(errors.New("invalid signer. cannot be nil"))
-	}
-
-	signatureHeader, err := NewSignatureHeader(id)
-	if err != nil {
-		panic(fmt.Errorf("failed generating a new SignatureHeader: %s", err))
-	}
-
-	return signatureHeader
-}
-
-// SignOrPanic signs a message and panics on error.
-func SignOrPanic(signer identity.Signer, msg []byte) []byte {
-	if signer == nil {
-		panic(errors.New("invalid signer. cannot be nil"))
-	}
-
-	sigma, err := signer.Sign(msg)
-	if err != nil {
-		panic(fmt.Errorf("failed generating signature: %s", err))
-	}
-	return sigma
 }
 
 // IsConfigBlock validates whenever given block contains configuration

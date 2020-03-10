@@ -61,17 +61,6 @@ func New(opts NewOpts, cryptoProvider bccsp.BCCSP) (MSP, error) {
 		default:
 			return nil, errors.Errorf("Invalid *BCCSPNewOpts. Version not recognized [%v]", opts.GetVersion())
 		}
-	case *IdemixNewOpts:
-		switch opts.GetVersion() {
-		case MSPv1_4_3:
-			fallthrough
-		case MSPv1_3:
-			return newIdemixMsp(MSPv1_3)
-		case MSPv1_1:
-			return newIdemixMsp(MSPv1_1)
-		default:
-			return nil, errors.Errorf("Invalid *IdemixNewOpts. Version not recognized [%v]", opts.GetVersion())
-		}
 	default:
 		return nil, errors.Errorf("Invalid msp.NewOpts instance. It must be either *BCCSPNewOpts or *IdemixNewOpts. It was [%v]", opts)
 	}

@@ -665,6 +665,5 @@ func (msp *bccspmsp) postSetupV142(conf *m.FabricMSPConfig) error {
 			return errors.Errorf("admin %d is invalid [%s,%s]", i, err1, err2)
 		}
 	}
-
 	return nil
 }
