@@ -1,6 +1,7 @@
 package msp
 
 import (
+	"TaiChainPKI/bccsp"
 	"time"
 
 	"github.com/hyperledger/fabric-protos-go/msp"
@@ -25,6 +26,7 @@ type MSP interface {
 	GetVersion() MSPVersion
 	GetType() ProviderType
 	GetIdentifier() (string, error)
+	GetIdentityFromConf(idBytes []byte) (Identity, bccsp.Key, error)
 	GetSigningIdentity(identifier *IdentityIdentifier) (SigningIdentity, error)
 	GetDefaultSigningIdentity() (SigningIdentity, error)
 	GetTLSRootCerts() [][]byte

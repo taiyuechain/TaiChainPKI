@@ -141,6 +141,10 @@ func (msp *bccspmsp) getCertFromPem(idBytes []byte) (*x509.Certificate, error) {
 	return cert, nil
 }
 
+func (msp *bccspmsp) GetIdentityFromConf(idBytes []byte) (Identity, bccsp.Key, error) {
+	return msp.getIdentityFromConf(idBytes)
+}
+
 func (msp *bccspmsp) getIdentityFromConf(idBytes []byte) (Identity, bccsp.Key, error) {
 	// get a cert
 	cert, err := msp.getCertFromPem(idBytes)

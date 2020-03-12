@@ -80,6 +80,10 @@ func readPemFile(file string) ([]byte, error) {
 	return bytes, nil
 }
 
+func GetPemMaterialFromDir(dir string) ([][]byte, error) {
+	return getPemMaterialFromDir(dir)
+}
+
 func getPemMaterialFromDir(dir string) ([][]byte, error) {
 
 	_, err := os.Stat(dir)

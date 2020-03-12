@@ -8,6 +8,7 @@ require (
 	github.com/hyperledger/fabric-protos-go v0.0.0-20200124220212-e9cfc186ba7b
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/miekg/pkcs11 v1.0.3
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.6.2
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
